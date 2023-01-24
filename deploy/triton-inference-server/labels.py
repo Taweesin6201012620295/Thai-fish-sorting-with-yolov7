@@ -10,6 +10,7 @@ class COCOLabels(Enum):
     hang_lueang = 5
     sai_dang = 6 
     sai_dum = 7 
+    er = 8
 
 """
     PERSON = 0

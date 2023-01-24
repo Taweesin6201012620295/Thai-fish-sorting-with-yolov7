@@ -90,7 +90,8 @@ def plot_one_box(x, img, color=None, label=None, line_thickness=3, name = None):
     elif color == "sai_dum":
         color = (128, 0, 128) # purple
     else: 
-        color = (255,0,255) # Magenta 
+        color = (112,25,25) # midnight blue 
+    
 
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
     
