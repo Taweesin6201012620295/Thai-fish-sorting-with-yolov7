@@ -58,18 +58,13 @@ def edit_boxes(arr):
         if i==0:
             temp = np.array(array_sort[i])
         if i>0  and not(np.array_equal(j, temp)):
-            #print('temp     is ', temp)
-            #print('new_temp is ', j)
             check = check_range(j,temp)
-            #print('state is >>>>>>>>>>', state)
             
             if check is None:
                 if len(get_list) != 0:
-                    #print("this's other box1 >> new_temp")
                     get_list.append(j.tolist())
                     state = False
                 else:
-                    #print("this's other box2 >> temp+new_temp")
                     get_list.append(temp.tolist())
                     get_list.append(j.tolist())
                     state = False
@@ -77,94 +72,82 @@ def edit_boxes(arr):
             elif check is not None:
                 if check is True :
                     if len(get_list) != 0:
-                        #print("this's other box2 >> new_temp")
                         get_list.append(j.tolist())
                         state = False
                     else:
-                        #print("this's other box3 >> temp+new_temp")
                         get_list.append(temp.tolist())
                         get_list.append(j.tolist())
                         state = False
 
                 elif type(check) == np.ndarray:
-                    #print('check : ', check)
                     if state == False :
                         if len(get_list) != 0:
-                            #print("choose max conf >> pop")
                             get_list.pop()
                             get_list.append(check.tolist())
                         else:
-                            #print("choose max conf >> no_pop1")
                             get_list.append(check.tolist())
                     elif state == True :
-                        #print("choose max conf >> no_pop2")
                         get_list.append(check.tolist())
                     state = True
                 else:
                     if len(get_list) == 0:
-                        #print('else check :', check)
                         get_list.append(temp.tolist())
                         get_list.append(j.tolist())
                     else:
-                        #print("I'm here!!!!!")
                         get_list.append(j.tolist())
-
-            #print("------------------------------------------------------")
             temp = j
-            #print('get_list', get_list)
     return get_list
     
 def color_class(index_class):
-
     match index_class:
-        case "0":
+        case 0:
             return (0,0,0) # pod is black
-        case "1":
+        case 1:
             return (255,0,0) # ku_lare is blue
-        case "2":
+        case 2:
             return (255,191,0) # see_kun is deep sky blue
-        case "3":
+        case 3:
             return (19,69,139) # too is saddle brown
-        case "4":
+        case 4:
             return (127,20,255) # khang_pan is deep pink
-        case "5":
+        case 5:
             return (0,140,255) # hang_lueang is orange
-        case "6":
+        case 6:
             return (0,0,255) # sai_dang is red
-        case "7":
+        case 7:
             return (128,0,128) # sai_dum is purple
 
 
-def detect_fish():
-    source="0"
-    weights=["yolov7_3200.pt"]
-    view_img = False
-    save_txt = True
-    imgsz = 640
-    trace = True
-    nosave = False
-    project = 'runs/detect'
-    name = "ex"
-    exist_ok=False
-    device=''
-    augment=False
-    conf_thres=0.25
-    iou_thres=0.45
-    classes=None
-    agnostic_nms=False
-    save_conf=True
+def detect_fish( 
+    source="0",
+    weights=["yolov7_3200.pt"],
+    view_img = False,
+    save_txt = False,
+    imgsz = 640,
+    trace = False,
+    nosave = False,
+    project = 'runs/detect',
+    name = "ex",
+    exist_ok=False,
+    device='',
+    augment=False,
+    conf_thres=0.25,
+    iou_thres=0.45,
+    classes=None,
+    agnostic_nms=False,
+    save_conf=False):
 
 
     save_img = not nosave and not source.endswith('.txt')  # save inference images
-    webcam = source.isnumeric() #or source.endswith('.txt') or source.lower().startswith( ('rtsp://', 'rtmp://', 'http://', 'https://') )
+    webcam = source.isnumeric()
     
     # Directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Initialize
-    set_logging()
-    device = select_device(device) # my device type='cpu'
+    #set_logging()
+    device = select_device(device) # checkdevice >> my device type='cpu'
     
     half = device.type != 'cpu'  # half precision only supported on CUDA
     # Load model 
@@ -172,8 +155,9 @@ def detect_fish():
     stride = int(model.stride.max())  # model stride : 32
     imgsz = check_img_size(imgsz, s=stride)  # check img_size : 640
 
-    if trace: # Trace : True
-        model = TracedModel(model, device, imgsz) # 
+
+    if trace: # Trace : False
+        model = TracedModel(model, device, imgsz)
 
     if half: 
         model.half()  # to FP16
@@ -193,11 +177,11 @@ def detect_fish():
     # Get names and colors
     '''names = ['pod', 'ku_lare', 'see_kun', 'too', 'khang_pan', 'hang_lueang', 'sai_dang', 'sai_dum']'''
     names = model.module.names if hasattr(model, 'module') else model.names 
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
+    #colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
 
     # Run inference 
     if device.type != 'cpu':
-        print("device != cpu")
+        #print("device != cpu")
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     old_img_w = old_img_h = imgsz # 640
     old_img_b = 1
@@ -210,7 +194,7 @@ def detect_fish():
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
-        # Warmup <<<<<< if "cpu" don't use
+        # Warmup <<< if "cpu" don't use
         if device.type != 'cpu' and (old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
             old_img_b = img.shape[0]
             old_img_h = img.shape[2]
@@ -224,7 +208,7 @@ def detect_fish():
         # Apply NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic=agnostic_nms)
 
-        # Process detections <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # Process detections
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
@@ -235,36 +219,28 @@ def detect_fish():
             save_path = str(save_dir / p.name)  # img.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh=[640,480,640,480]
-            if len(det): # !!!!!!!
+
+            if len(det): # detect have object in image
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
 
                 # Write results text file  
-                temp = []
+                temp = [] # get all label object
                 for *xyxy, conf, cls in reversed(det):
                     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                     ## edit label 
-                    class_fish = int(cls)
-                    x = float(xywh[0])
-                    y = float(xywh[1])
-                    w = float(xywh[2])
-                    h = float(xywh[3])
-                    confident = float(conf)
-                    temp.append([class_fish, x, y, w ,h ,confident])
+                    temp.append([int(cls), float(xywh[0]), float(xywh[1]), float(xywh[2]) ,float(xywh[3]) ,float(conf)])
 
                 try:        
-                    #print('temp :', len(temp), temp)
+                    # check same label
                     edited = edit_boxes(temp)
-                    #print('result1 : ', len(edited), edited)
                     edited2 = edit_boxes(edited)
-                    #print('result2 : ', len(edited2), edited2)
                     print("---------------------------------------------------")
                 
                     for i in edited2:
                         name_class, x_center, y_center, width, height, conf = i[0], i[1], i[2], i[3], i[4], i[5]
                         line = f"{int(name_class)} {x_center} {y_center} {width} {height} {conf}"
-                        #print(f'{names[int(name_class)]} {conf:.2f}')
-                        print(line)
+                        print(f'{names[int(name_class)]} {conf:.2f}')
 
                         save_txt = False
                         save_conf = False
@@ -287,11 +263,11 @@ def detect_fish():
                             # write rectangle (box)
                             tl = line_thickness or round(0.002 * (im0.shape[0] + im0.shape[1]) / 2) + 1  # line/font thickness
                             c1,c2 = (x_min, y_min), (x_max, y_max)
-                            color = color_class(str(int(name_class)))
+                            color = color_class(int(name_class))
                             cv2.rectangle(im0, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA) #change size 
                             # write label
                             tf = max(tl - 1, 1)  # font thickness
-                            t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
+                            t_size = cv2.getTextSize(label, 0, fontScale=tl / 8, thickness=tf)[0]
                             c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
                             cv2.rectangle(im0, c1, c2, color, -1, cv2.LINE_AA)  # filled
                             cv2.putText(im0, label, (c1[0], c1[1] - 2), 0, 0.5, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
@@ -310,5 +286,21 @@ def detect_fish():
         
 if __name__ == '__main__':
            
-    detect_fish()
+    detect_fish(source="0",
+    weights=["yolov7_3200.pt"],
+    view_img = False,
+    save_txt = False,
+    imgsz = 640,
+    trace = False,
+    nosave = False,
+    project = 'runs/detect',
+    name = "ex",
+    exist_ok=False,
+    device='',
+    augment=False,
+    conf_thres=0.25,
+    iou_thres=0.45,
+    classes=None,
+    agnostic_nms=False,
+    save_conf=False)
     
