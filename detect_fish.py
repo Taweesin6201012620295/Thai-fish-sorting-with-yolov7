@@ -4,40 +4,32 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
-from numpy import random
 import numpy as np
 import math
-
 from models.experimental import attempt_load 
 from utils.datasets import LoadStreams, LoadImages
-from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, set_logging, xyxy2xywh, increment_path
-from utils.plots import plot_one_box
-from utils.torch_utils import select_device, time_synchronized, TracedModel
+from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, xyxy2xywh, increment_path
+from utils.torch_utils import select_device, TracedModel
 
 def in_range(new_val, old_val):
     new_val, old_val = float(new_val), float(old_val)
     n = 0.1 
     if new_val >= old_val-n and new_val <= old_val+n:
-        #print(new_val,'in range', old_val) 
-        return True
+        return True # in range
     else:
-        #print(new_val,'out of range', old_val) 
-        return False
+        return False # out of range
 
 def check_range(j,temp):
     cl = False if j[0] == temp[0] else True
-    #print(cl)
     x = in_range(j[1],temp[1])
     y = in_range(j[2],temp[2])
     w = in_range(j[3],temp[3])
     h = in_range(j[4],temp[4])
     if x and y and w and h :
-        #print(x,y,w,h)
+        # check confident
         if j[5] >= temp[5]:
-            #print(j[5], "max")
             return j
         elif temp[5] >= j[5]:
-            #print(temp[5], "max")
             return temp
     elif cl == True and not(x and y and w and h) :
         return True
@@ -46,21 +38,20 @@ def check_range(j,temp):
         
 
 def edit_boxes(arr):
-    
     arr = np.array(arr)
     array_sort = arr[arr[:,1].argsort()]
-
     get_list = []
     state = False
 
     for i, j in enumerate(array_sort):
-        
         if i==0:
             temp = np.array(array_sort[i])
+
         if i>0  and not(np.array_equal(j, temp)):
+
+            # check same box
             check = check_range(j,temp)
-            
-            if check is None:
+            if check is True :
                 if len(get_list) != 0:
                     get_list.append(j.tolist())
                     state = False
@@ -69,32 +60,23 @@ def edit_boxes(arr):
                     get_list.append(j.tolist())
                     state = False
 
-            elif check is not None:
-                if check is True :
+            elif type(check) == np.ndarray:
+                if state == False :
                     if len(get_list) != 0:
-                        get_list.append(j.tolist())
-                        state = False
-                    else:
-                        get_list.append(temp.tolist())
-                        get_list.append(j.tolist())
-                        state = False
-
-                elif type(check) == np.ndarray:
-                    if state == False :
-                        if len(get_list) != 0:
-                            get_list.pop()
-                            get_list.append(check.tolist())
-                        else:
-                            get_list.append(check.tolist())
-                    elif state == True :
+                        get_list.pop()
                         get_list.append(check.tolist())
-                    state = True
-                else:
-                    if len(get_list) == 0:
-                        get_list.append(temp.tolist())
-                        get_list.append(j.tolist())
                     else:
-                        get_list.append(j.tolist())
+                        get_list.append(check.tolist())
+                elif state == True :
+                    get_list.append(check.tolist())
+                state = True
+
+            else: # check = False
+                if len(get_list) == 0:
+                    get_list.append(temp.tolist())
+                    get_list.append(j.tolist())
+                else:
+                    get_list.append(j.tolist())
             temp = j
     return get_list
     
@@ -137,16 +119,16 @@ def detect_fish(
     agnostic_nms=False,
     save_conf=False):
 
-
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric()
     
     # Directories
-    save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
-    (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+    if nosave and save_txt is True:
+        save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
+        (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+        
 
     # Initialize
-    #set_logging()
     device = select_device(device) # checkdevice >> my device type='cpu'
     
     half = device.type != 'cpu'  # half precision only supported on CUDA
@@ -216,8 +198,9 @@ def detect_fish(
                 p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0) # don't use
 
             p = Path(p)  # to Path windowspath='0'
-            save_path = str(save_dir / p.name)  # img.jpg
-            txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
+            if nosave and save_txt is True:
+                save_path = str(save_dir / p.name)  # img.jpg
+                txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh=[640,480,640,480]
 
             if len(det): # detect have object in image
@@ -235,7 +218,6 @@ def detect_fish(
                     # check same label
                     edited = edit_boxes(temp)
                     edited2 = edit_boxes(edited)
-                    print("---------------------------------------------------")
                 
                     for i in edited2:
                         name_class, x_center, y_center, width, height, conf = i[0], i[1], i[2], i[3], i[4], i[5]
@@ -271,15 +253,16 @@ def detect_fish(
                             c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
                             cv2.rectangle(im0, c1, c2, color, -1, cv2.LINE_AA)  # filled
                             cv2.putText(im0, label, (c1[0], c1[1] - 2), 0, 0.5, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+                    print("---------------------------------------------------")
+                
                 except:pass  
 
-            # Stream results
-            if source != "0" and save_img:
+            # save image
+            if not source.isnumeric() and save_img: 
                 cv2.imwrite(save_path, im0)
 
-            #view_img = False
-            if view_img:
-                #im0 = cv2.resize(im0, (600, 400))
+            # Stream results
+            if view_img and source.isnumeric():
                 cv2.imshow("show fish", im0) 
                 cv2.waitKey(1)  # 1 millisecond
 
