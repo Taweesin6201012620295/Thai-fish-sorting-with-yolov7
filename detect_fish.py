@@ -6,80 +6,97 @@ import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
 import math
+
 from models.experimental import attempt_load 
 from utils.datasets import LoadStreams, LoadImages
-from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, xyxy2xywh, increment_path
+from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, set_logging, xyxy2xywh, increment_path
 from utils.torch_utils import select_device, TracedModel
 
+
+# check range
 def in_range(new_val, old_val):
     new_val, old_val = float(new_val), float(old_val)
-    n = 0.1 
+    n = 0.05  
     if new_val >= old_val-n and new_val <= old_val+n:
-        return True # in range
+        return True
     else:
-        return False # out of range
+        return False
+    
 
+# check same location    
 def check_range(j,temp):
-    cl = False if j[0] == temp[0] else True
     x = in_range(j[1],temp[1])
     y = in_range(j[2],temp[2])
     w = in_range(j[3],temp[3])
     h = in_range(j[4],temp[4])
+    #print("xywh : ",x,y,w,h)
+    
     if x and y and w and h :
-        # check confident
+        #print(x,y,w,h)
         if j[5] >= temp[5]:
+            #print(j[5], "max")
             return j
         elif temp[5] >= j[5]:
+            #print(temp[5], "max")
             return temp
-    elif cl == True and not(x and y and w and h) :
-        return True
     else:
+        #print("return_check_range : False")
         return False
-        
-
+ 
+# edit bboxes
 def edit_boxes(arr):
+    
     arr = np.array(arr)
     array_sort = arr[arr[:,1].argsort()]
+
+    #print("array_sort : \n", array_sort)
+    #print(len(array_sort))
     get_list = []
     state = False
+    check_old = None
 
     for i, j in enumerate(array_sort):
+        
         if i==0:
             temp = np.array(array_sort[i])
-
         if i>0  and not(np.array_equal(j, temp)):
-
-            # check same box
+            #print('temp     is ', temp)
+            #print('new_temp is ', j)
             check = check_range(j,temp)
-            if check is True :
+            #print('check : ', check)
+            #print('check_old :', check_old)
+            
+            if type(check) == np.ndarray:
                 if len(get_list) != 0:
-                    get_list.append(j.tolist())
-                    state = False
-                else:
-                    get_list.append(temp.tolist())
-                    get_list.append(j.tolist())
-                    state = False
-
-            elif type(check) == np.ndarray:
-                if state == False :
-                    if len(get_list) != 0:
+                    if type(check_old) == np.ndarray and not np.array_equal(check, check_old):
+                        #print("choose max conf >> pop1")
+                        # check after list have conf max same now
+                        new_check = check_range(check, check_old)
+                        get_list.pop()
+                        get_list.append(new_check.tolist())
+                    else:
+                        #print("choose max conf >> pop2")
                         get_list.pop()
                         get_list.append(check.tolist())
-                    else:
-                        get_list.append(check.tolist())
-                elif state == True :
+                else: # don't have anything in list
+                    #print("choose max conf >> no_pop1")
                     get_list.append(check.tolist())
-                state = True
-
-            else: # check = False
-                if len(get_list) == 0:
-                    get_list.append(temp.tolist())
+                
+            else: # False
+                if len(get_list) != 0:
+                    #print("this's other box1 >> new_temp")
                     get_list.append(j.tolist())
                 else:
+                    #print("this's other box2 >> temp+new_temp")
+                    get_list.append(temp.tolist())
                     get_list.append(j.tolist())
+                    
             temp = j
+            check_old = check
+            #print("get_list : ", get_list)
+        #print("-----------------------------------------------------------------")
     return get_list
-    
+   
 def color_class(index_class):
     match index_class:
         case 0:
@@ -100,36 +117,21 @@ def color_class(index_class):
             return (128,0,128) # sai_dum is purple
 
 
-def detect_fish( 
-    source="0",
-    weights=["yolov7_3200.pt"],
-    view_img = False,
-    save_txt = False,
-    imgsz = 640,
-    trace = False,
-    nosave = False,
-    project = 'runs/detect',
-    name = "ex",
-    exist_ok=False,
-    device='',
-    augment=False,
-    conf_thres=0.25,
-    iou_thres=0.45,
-    classes=None,
-    agnostic_nms=False,
-    save_conf=False):
-
-    save_img = not nosave and not source.endswith('.txt')  # save inference images
-    webcam = source.isnumeric()
+def detect_fish(source, weights, view_img, save_txt, imgsz, trace, save_image, project, name, exist_ok,
+                device, augment, conf_thres, iou_thres, classes, agnostic_nms, save_conf):
+    
+    save_img = save_image #and not source.endswith('.txt')  # save inference images
+    webcam = source.isnumeric() #or source.endswith('.txt') or source.lower().startswith( ('rtsp://', 'rtmp://', 'http://', 'https://') )
     
     # Directories
-    if nosave and save_txt is True:
+    if save_txt and not source.isnumeric():
+        print("make dir save")
         save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
         (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-        
 
     # Initialize
-    device = select_device(device) # checkdevice >> my device type='cpu'
+    #set_logging()
+    device = select_device(device) # my device type='cpu'
     
     half = device.type != 'cpu'  # half precision only supported on CUDA
     # Load model 
@@ -152,23 +154,24 @@ def detect_fish(
         view_img = check_imshow()
         cudnn.benchmark = True  # set True to speed up constant image size inference
         dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+        print("webcam source <------------------------------------")
     else:
         dataset = LoadImages(source, img_size=imgsz, stride=stride)
+        print("image source <------------------------------------")
 
 
     # Get names and colors
     '''names = ['pod', 'ku_lare', 'see_kun', 'too', 'khang_pan', 'hang_lueang', 'sai_dang', 'sai_dum']'''
     names = model.module.names if hasattr(model, 'module') else model.names 
-    #colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
 
     # Run inference 
     if device.type != 'cpu':
-        #print("device != cpu")
+        print("device != cpu")
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     old_img_w = old_img_h = imgsz # 640
     old_img_b = 1
 
-    for path, img, im0s, vid_cap in dataset: # path=['0], img=[image], vid_cap=None
+    for path, img, im0s, vid_cap in dataset: # path=['0'], img=[image], vid_cap=None
         # image small size
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -176,7 +179,7 @@ def detect_fish(
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
-        # Warmup <<< if "cpu" don't use
+        # Warmup <<<<<< if "cpu" don't use
         if device.type != 'cpu' and (old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
             old_img_b = img.shape[0]
             old_img_h = img.shape[2]
@@ -190,50 +193,58 @@ def detect_fish(
         # Apply NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic=agnostic_nms)
 
-        # Process detections
+        # Process detections <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         for i, det in enumerate(pred):  # detections per image
+            
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
             else:
                 p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0) # don't use
 
             p = Path(p)  # to Path windowspath='0'
-            if nosave and save_txt is True:
+            if save_img and save_txt and not source.isnumeric():
                 save_path = str(save_dir / p.name)  # img.jpg
                 txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh=[640,480,640,480]
-
-            if len(det): # detect have object in image
+            if len(det): # !!!!!!!
+                #print("len det", len(det))
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
 
                 # Write results text file  
-                temp = [] # get all label object
+                temp = []
                 for *xyxy, conf, cls in reversed(det):
                     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                     ## edit label 
                     temp.append([int(cls), float(xywh[0]), float(xywh[1]), float(xywh[2]) ,float(xywh[3]) ,float(conf)])
+                #print("temp : ", temp)
 
                 try:        
-                    # check same label
-                    edited = edit_boxes(temp)
-                    edited2 = edit_boxes(edited)
+                    if len(temp) != 1:
+                        temp = edit_boxes(temp)
+                        #print('result1 : ', len(temp), temp)
+                        temp = edit_boxes(temp)
+                        #print('result2 : ', len(temp), temp)
+                    else:
+                        #print("temp : ", temp)
+                        pass
                 
-                    for i in edited2:
+                    for i in temp:
                         name_class, x_center, y_center, width, height, conf = i[0], i[1], i[2], i[3], i[4], i[5]
-                        line = f"{int(name_class)} {x_center} {y_center} {width} {height} {conf}"
                         print(f'{names[int(name_class)]} {conf:.2f}')
-
-                        save_txt = False
-                        save_conf = False
+                        line = f"{int(name_class)} {x_center} {y_center} {width} {height} {conf}"
+                        #print(line)
                         
-                        if save_txt:
+                        if save_txt and not source.isnumeric():
+                            #print("save-txt")
                             if save_conf == False:
                                 line = f"{int(name_class)} {x_center} {y_center} {width} {height}"
                             with open(txt_path + '.txt', 'a') as f:
                                 f.write(line + '\n')
-                            
-                        if save_img:  # Add bbox to image
+
+                        if save_img:
+                            # Add bbox to image
+                            #print("add-label-image")
                             label = f'{names[int(name_class)]} {conf:.2f}'
                             line_thickness=5
                             # convert xywh to xyxy
@@ -248,42 +259,48 @@ def detect_fish(
                             color = color_class(int(name_class))
                             cv2.rectangle(im0, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA) #change size 
                             # write label
-                            tf = max(tl - 1, 1)  # font thickness
+                            tf = max(tl - 1, 0.5)  # font thickness
                             t_size = cv2.getTextSize(label, 0, fontScale=tl / 8, thickness=tf)[0]
                             c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
                             cv2.rectangle(im0, c1, c2, color, -1, cv2.LINE_AA)  # filled
                             cv2.putText(im0, label, (c1[0], c1[1] - 2), 0, 0.5, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
-                    print("---------------------------------------------------")
-                
+
+                            # Stream results
+                            if not source.isnumeric() and save_img:
+                                #print("save-image")
+                                cv2.imwrite(save_path, im0)
+                    
+                    #print("Result: ", temp) # array label [class, x, y, w,h, confident] # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 except:pass  
 
-            # save image
-            if not source.isnumeric() and save_img: 
-                cv2.imwrite(save_path, im0)
+                print("---------------------------------------------------")
+                
 
-            # Stream results
             if view_img and source.isnumeric():
+                #print("show-real-time")
                 cv2.imshow("show fish", im0) 
                 cv2.waitKey(1)  # 1 millisecond
 
         
 if __name__ == '__main__':
            
-    detect_fish(source="0",
-    weights=["yolov7_3200.pt"],
-    view_img = False,
-    save_txt = False,
-    imgsz = 640,
-    trace = False,
-    nosave = False,
-    project = 'runs/detect',
-    name = "ex",
-    exist_ok=False,
-    device='',
-    augment=False,
-    conf_thres=0.25,
-    iou_thres=0.45,
-    classes=None,
-    agnostic_nms=False,
-    save_conf=False)
+    detect_fish(
+                source="0",
+                weights=["yolov7_3200.pt"],
+                view_img = False,
+                save_conf=True,  
+                save_txt = True,
+                save_image = True,
+                device='',
+                conf_thres=0.25,
+                imgsz = 640,
+                trace = False,
+                project = 'runs/detect',
+                name = "ex",
+                exist_ok=False,
+                augment=False,
+                iou_thres=0.45,
+                classes=None,
+                agnostic_nms=False
+                )
     
