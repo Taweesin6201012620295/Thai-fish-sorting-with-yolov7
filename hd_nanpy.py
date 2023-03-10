@@ -27,7 +27,7 @@ def call_arduino(pred_fish):
         while True:
             if a.digitalRead(12) == False: #edit ir pin/servo for each type of fish(idex+6)
                 servo.write(100)
-                time.sleep(1)
+                time.sleep(7)
                 servo.write(0)
                 break
     else:
@@ -36,7 +36,7 @@ def call_arduino(pred_fish):
 
 def convenyor():
     while True:
-        a.analogWrite(3, 255)
+        a.analogWrite(3, 100)
         a.digitalWrite(4, a.LOW)
         a.digitalWrite(5, a.HIGH)
         time.sleep(2)
