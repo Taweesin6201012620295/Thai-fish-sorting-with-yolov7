@@ -54,5 +54,3 @@ def convenyor_stop():
     a.analogWrite(3, 0)
     a.digitalWrite(4, a.LOW)
     a.digitalWrite(5, a.HIGH)
-
-convenyor_stop()
