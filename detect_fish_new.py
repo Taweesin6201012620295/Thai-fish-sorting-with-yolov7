@@ -14,6 +14,7 @@ from utils.torch_utils import select_device, TracedModel
 
 from hd_nanpy import call_arduino
 from hd_nanpy import convenyor_run
+from hd_nanpy import convenyor_stop
 from threading import Thread
     
 
@@ -324,5 +325,3 @@ if __name__ == '__main__':
 
     thr2.start()
     thr1.start()
-
-    
