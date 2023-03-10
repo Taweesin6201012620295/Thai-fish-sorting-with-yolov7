@@ -26,7 +26,7 @@ def call_arduino(pred_fish):
         #a.pinMode(index_fish+6, a.INPUT) # IR sensor
         while True:
             if a.digitalRead(12) == False: #edit ir pin/servo for each type of fish(idex+6)
-                servo.write(100)
+                servo.write(60)
                 time.sleep(7)
                 servo.write(0)
                 break
@@ -36,17 +36,17 @@ def call_arduino(pred_fish):
 
 def convenyor():
     while True:
-        a.analogWrite(3, 100)
+        a.analogWrite(3, 80)
         a.digitalWrite(4, a.LOW)
         a.digitalWrite(5, a.HIGH)
-        time.sleep(2)
+        '''time.sleep(2)
         a.analogWrite(3, 0)
         a.digitalWrite(4, a.LOW)
         a.digitalWrite(5, a.HIGH)
-        time.sleep(2)
+        time.sleep(2)'''
 
 def convenyor_run():
-    a.analogWrite(3, 255)
+    a.analogWrite(3, 100)
     a.digitalWrite(4, a.LOW)
     a.digitalWrite(5, a.HIGH)
 
@@ -54,3 +54,5 @@ def convenyor_stop():
     a.analogWrite(3, 0)
     a.digitalWrite(4, a.LOW)
     a.digitalWrite(5, a.HIGH)
+
+convenyor_stop()
