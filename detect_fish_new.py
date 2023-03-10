@@ -298,26 +298,7 @@ def detect_fish(source, weights, view_img, save_txt, imgsz, trace, save_image, p
 
         
 if __name__ == '__main__':
-           
-    '''detect_fish(
-                source="0",
-                weights=["yolov7_3200.pt"],
-                view_img = False,
-                save_conf=True,  
-                save_txt = True,
-                save_image = True,
-                device='',
-                conf_thres=0.25,
-                imgsz = 640,
-                trace = False,
-                project = 'runs/detect',
-                name = "ex",
-                exist_ok=False,
-                augment=False,
-                iou_thres=0.45,
-                classes=None,
-                agnostic_nms=False
-                )'''
+    
     thr1 = Thread(target=detect_fish, args=["0", ["yolov7_3200.pt"], 
                 False, True, 640, False, True, 'runs/detect', 'name', False,
                 'cpu', False, 0.25, 0.45, None, False, True])
