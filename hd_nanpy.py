@@ -37,17 +37,6 @@ def call_arduino(pred_fish):
         print("Error Fish")
         servo.write(180)
 
-def convenyor():
-    while True:
-        a.analogWrite(3, 80)
-        a.digitalWrite(4, a.HIGH)
-        a.digitalWrite(5, a.LOW)
-        '''time.sleep(2)
-        a.analogWrite(3, 0)
-        a.digitalWrite(4, a.LOW)
-        a.digitalWrite(5, a.HIGH)
-        time.sleep(2)'''
-
 def convenyor_run():
     a.analogWrite(3, 100)
     a.digitalWrite(4, a.LOW)
@@ -57,5 +46,3 @@ def convenyor_stop():
     a.analogWrite(3, 0)
     a.digitalWrite(4, a.LOW)
     a.digitalWrite(5, a.HIGH)
-
-convenyor_run()
