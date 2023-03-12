@@ -10,7 +10,8 @@ connection = SerialManager(device='COM3')
 a = ArduinoApi(connection=connection)
 
 servo = Servo(9, connection=connection)
-servo.write(0)
+servo.write(180)
+
 a.pinMode(12, a.INPUT) # IR sensor
 
 a.pinMode(3, a.OUTPUT) # ENA
@@ -26,13 +27,26 @@ def call_arduino(pred_fish):
         #a.pinMode(index_fish+6, a.INPUT) # IR sensor
         while True:
             if a.digitalRead(12) == False: #edit ir pin/servo for each type of fish(idex+6)
-                servo.write(60)
-                time.sleep(7)
-                servo.write(0)
+                servo.write(135)
+                time.sleep(4)
+                servo.write(110)
+                time.sleep(0.5)
+                servo.write(180)
                 break
     else:
         print("Error Fish")
-        servo.write(0)
+        servo.write(180)
+
+def convenyor():
+    while True:
+        a.analogWrite(3, 80)
+        a.digitalWrite(4, a.HIGH)
+        a.digitalWrite(5, a.LOW)
+        '''time.sleep(2)
+        a.analogWrite(3, 0)
+        a.digitalWrite(4, a.LOW)
+        a.digitalWrite(5, a.HIGH)
+        time.sleep(2)'''
 
 def convenyor_run():
     a.analogWrite(3, 100)
@@ -43,3 +57,5 @@ def convenyor_stop():
     a.analogWrite(3, 0)
     a.digitalWrite(4, a.LOW)
     a.digitalWrite(5, a.HIGH)
+
+convenyor_run()
