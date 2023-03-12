@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+from PyQt5.QtWidgets import QMessageBox
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -231,12 +231,12 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         self.checkBox_all.stateChanged.connect(self.select_all)
         self.start.clicked.connect(self.select)
         self.stop.clicked.connect(self.stop_work)
         self.exit.clicked.connect(self.stop_exit)
-        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -257,44 +257,75 @@ class Ui_MainWindow(object):
         self.checkBox_khang_pan.setText(_translate("MainWindow", "ปลาข้างปาน"))
         self.checkBox_too.setText(_translate("MainWindow", "ปลาทู"))
 
-    ############################################################################################################################
+    ##############################################################################################################
     def select_all(self, state):
-        checkboxs = [self.checkBox_hang_lueang, self.checkBox_khang_pan, self.checkBox_pod, self.checkBox_ku_lare,
-                        self.checkBox_see_kun, self.checkBox_too, self.checkBox_sai_dang, self.checkBox_sai_dum]
+        checkboxs = [self.checkBox_hang_lueang, self.checkBox_khang_pan, 
+                     self.checkBox_pod, self.checkBox_ku_lare,
+                     self.checkBox_see_kun, self.checkBox_too, 
+                     self.checkBox_sai_dang, self.checkBox_sai_dum]
         for checkbox in checkboxs:
             checkbox.setCheckState(state)
 
 
-    def check(self):
-
-        if self.checkBox_hang_lueang.isChecked():
-            print("hang_lueang")
-        if self.checkBox_khang_pan.isChecked():
-            print("khang_pan")
+    def check_select(self):
+        store_select = []
+        self.state_fish = False
         if self.checkBox_pod.isChecked():
-            print("pod")
+            store_select.append(0)
+            self.state_fish = True
         if self.checkBox_ku_lare.isChecked():
-            print("ku_lare")
+            store_select.append(1)
+            self.state_fish = True
         if self.checkBox_see_kun.isChecked():
-            print("see_kun")
+            store_select.append(2)
+            self.state_fish = True
         if self.checkBox_too.isChecked():
-            print("too")
+            store_select.append(3)
+            self.state_fish = True
+        if self.checkBox_khang_pan.isChecked():
+            store_select.append(4)
+            self.state_fish = True
+        if self.checkBox_hang_lueang.isChecked():
+            store_select.append(5)            
+            self.state_fish = True
         if self.checkBox_sai_dang.isChecked():
-            print("sai_dang")
+            store_select.append(6)
+            self.state_fish = True
         if self.checkBox_sai_dum.isChecked():
-            print("sai_dum")
+            store_select.append(7)
+        return store_select
         
     def select(self):
-        self.check()
         print("start")
+        self.check_select()
+        if self.state_fish:
+            self.start.hide()
+        else:
+            msg_box_name = QMessageBox() 
+            msg_box_name.setIcon(QMessageBox.Warning)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap("img_fish/fish.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            msg_box_name.setWindowIcon(icon)
+            msg_box_name.setText("please select fish""")
+            msg_box_name.setWindowTitle("Warning")
+            msg_box_name.setStandardButtons(QMessageBox.Ok)
+            msg_box_name.exec_()
 
     def stop_work(self):
-        print("stop")
+        self.start.show()
+        checkboxs = [self.checkBox_hang_lueang, self.checkBox_khang_pan, 
+                     self.checkBox_pod, self.checkBox_ku_lare,
+                     self.checkBox_see_kun, self.checkBox_too, 
+                     self.checkBox_sai_dang, self.checkBox_sai_dum,
+                     self.checkBox_all]
+        for checkbox in checkboxs:
+            checkbox.setCheckState(False)
+
 
     def stop_exit(self):
         self.stop_work()
         self.exit.clicked.connect(exit)
-        print("exit")
+        #print("exit")
 
 
 if __name__ == "__main__":
