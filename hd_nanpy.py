@@ -1,32 +1,76 @@
 import time
-from nanpy import *
+from nanpy import SerialManager, ArduinoApi, Servo
 
-selected_fishes = ['pod', 'ku_lare', 'see_kun', 'too', 'hang_lueang', 'khang_pan', 'sai_dang', 'sai_dum']
-#pred_fish = "pod"
+# pin number
+# servo
+servo_pin0 = 9
+servo_pin1 = 10
+servo_pin2 = 10
+servo_pin3 = 10
+servo_pin4 = 10
+servo_pin5 = 10
+servo_pin6 = 10
+servo_pin7 = 10
+# IR sensor
+ir_pin0 = 12
+ir_pin1 = 13
+ir_pin2 = 13
+ir_pin3 = 13
+ir_pin4 = 13
+ir_pin5 = 13
+ir_pin6 = 13
+ir_pin7 = 13
+# motor driver
+ENA_pin = 3
+IN1_pin = 4
+IN2_pin = 5
 
-#state = []
 
 connection = SerialManager(device='COM3')
 a = ArduinoApi(connection=connection)
 
-servo = Servo(9, connection=connection)
-servo.write(180)
+a.pinMode(ENA_pin, a.OUTPUT)
+a.pinMode(IN1_pin, a.OUTPUT)
+a.pinMode(IN2_pin, a.OUTPUT)
 
-a.pinMode(12, a.INPUT) # IR sensor
-
-a.pinMode(3, a.OUTPUT) # ENA
-a.pinMode(4, a.OUTPUT) # IN1
-a.pinMode(5, a.OUTPUT) # IN2
-
-def call_arduino(pred_fish):
+def call_arduino(pred_fish, select_fish):
     
-    if pred_fish in selected_fishes:
-        index_fish = selected_fishes.index(pred_fish)
-        out_val = "servo" + str(index_fish)
-        print(out_val)
+    if pred_fish in select_fish:
+        index_fish = select_fish.index(pred_fish)
+        print("servo" + str(index_fish))
+        # check servo pin
+        if index_fish == 0:
+            servo_pin = servo_pin0
+            ir_pin = ir_pin0
+        elif index_fish == 1:
+            servo_pin = servo_pin1
+            ir_pin = ir_pin1
+        elif index_fish == 2:
+            servo_pin = servo_pin2
+            ir_pin = ir_pin2
+        elif index_fish == 3:
+            servo_pin = servo_pin3
+            ir_pin = ir_pin3
+        elif index_fish == 4:
+            servo_pin = servo_pin4
+            ir_pin = ir_pin4
+        elif index_fish == 5:
+            servo_pin = servo_pin5
+            ir_pin = ir_pin5
+        elif index_fish == 6:
+            servo_pin = servo_pin6
+            ir_pin = ir_pin6
+        elif index_fish == 7:
+            servo_pin = servo_pin7
+            ir_pin = ir_pin7
+
+        servo = Servo(servo_pin, connection=connection)
+        servo.write(180)
+        a.pinMode(ir_pin, a.INPUT)
+
         #a.pinMode(index_fish+6, a.INPUT) # IR sensor
         while True:
-            if a.digitalRead(12) == False: #edit ir pin/servo for each type of fish(idex+6)
+            if a.digitalRead(ir_pin) == False: #edit ir pin/servo for each type of fish(idex+6)
                 servo.write(135)
                 time.sleep(4)
                 servo.write(110)
@@ -35,14 +79,13 @@ def call_arduino(pred_fish):
                 break
     else:
         print("Error Fish")
-        servo.write(180)
 
 def convenyor_run():
-    a.analogWrite(3, 100)
-    a.digitalWrite(4, a.LOW)
-    a.digitalWrite(5, a.HIGH)
+    a.analogWrite(ENA_pin, 100)
+    a.digitalWrite(IN1_pin, a.LOW)
+    a.digitalWrite(IN2_pin, a.HIGH)
 
 def convenyor_stop():
-    a.analogWrite(3, 0)
-    a.digitalWrite(4, a.LOW)
-    a.digitalWrite(5, a.HIGH)
+    a.analogWrite(ENA_pin, 0)
+    a.digitalWrite(IN1_pin, a.LOW)
+    a.digitalWrite(IN2_pin, a.HIGH)
