@@ -101,14 +101,14 @@ def call_arduino(pred_fish, select_fish):
                     a.digitalWrite(led_pin6,a.LOW)
                     break
                 elif index_fish == 7:
-                    """print("open gate 7")
-                    time.sleep(5)
+                    print("open gate 7")
+                    """time.sleep(5)
                     a.pinMode(led_pin7, a.OUTPUT)
                     a.digitalWrite(led_pin7, a.HIGH)
                     time.sleep(4)
                     a.digitalWrite(led_pin7,a.LOW)
                     break"""
-                    pass
+                  
     else:
         print("This fish doesn't sellect")
         
@@ -122,6 +122,3 @@ def convenyor_stop():
     a.analogWrite(ENA_pin, 0)
     a.digitalWrite(IN1_pin, a.LOW)
     a.digitalWrite(IN2_pin, a.HIGH)
-
-#convenyor_stop
-#convenyor_stop()
