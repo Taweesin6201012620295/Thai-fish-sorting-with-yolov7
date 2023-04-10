@@ -47,7 +47,7 @@ def call_arduino(pred_fish, select_fish):
                     servo.write(180)
                     print("open gate 0")
                     servo.write(135)
-                    time.sleep(4)
+                    time.sleep(3)
                     servo.write(110)
                     time.sleep(0.5)
                     servo.write(180)
@@ -57,7 +57,7 @@ def call_arduino(pred_fish, select_fish):
                     time.sleep(5)
                     a.pinMode(led_pin1, a.OUTPUT)
                     a.digitalWrite(led_pin1, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin1,a.LOW)
                     break
                 elif index_fish == 2:
@@ -65,7 +65,7 @@ def call_arduino(pred_fish, select_fish):
                     time.sleep(5)
                     a.pinMode(led_pin2, a.OUTPUT)
                     a.digitalWrite(led_pin2, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin1,a.LOW)
                     break
                 elif index_fish == 3:
@@ -81,7 +81,7 @@ def call_arduino(pred_fish, select_fish):
                     time.sleep(5)
                     a.pinMode(led_pin4, a.OUTPUT)
                     a.digitalWrite(led_pin4, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin4,a.LOW)
                     break
                 elif index_fish == 5:
@@ -89,7 +89,7 @@ def call_arduino(pred_fish, select_fish):
                     time.sleep(5)
                     a.pinMode(led_pin5, a.OUTPUT)
                     a.digitalWrite(led_pin5, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin5,a.LOW)
                     break
                 elif index_fish == 6:
@@ -97,7 +97,7 @@ def call_arduino(pred_fish, select_fish):
                     time.sleep(5)
                     a.pinMode(led_pin6, a.OUTPUT)
                     a.digitalWrite(led_pin6, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin6,a.LOW)
                     break
                 elif index_fish == 7:
@@ -105,7 +105,7 @@ def call_arduino(pred_fish, select_fish):
                     """time.sleep(5)
                     a.pinMode(led_pin7, a.OUTPUT)
                     a.digitalWrite(led_pin7, a.HIGH)
-                    time.sleep(4)
+                    time.sleep(3)
                     a.digitalWrite(led_pin7,a.LOW)
                     break"""
                   
