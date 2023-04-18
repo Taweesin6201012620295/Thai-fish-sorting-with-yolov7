@@ -290,6 +290,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             assert cap.isOpened(), f'Failed to open {s}'
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            #cap.set(cv2.CAP_PROP_FPS,50)
             self.fps = cap.get(cv2.CAP_PROP_FPS) % 100
 
             _, self.imgs[i] = cap.read()  # guarantee first frame

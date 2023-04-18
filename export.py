@@ -127,6 +127,7 @@ if __name__ == '__main__':
              'output': {0: 'batch', 2: 'y', 3: 'x'}}
         if opt.dynamic_batch:
             opt.batch_size = 'batch'
+            
             dynamic_axes = {
                 'images': {
                     0: 'batch',
