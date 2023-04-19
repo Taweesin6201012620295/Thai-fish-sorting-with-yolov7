@@ -37,9 +37,10 @@ def edit_boxes(arr):
         return arr  
     else:
         arr = np.array(arr)
-        array_sort = arr[arr[:,1].argsort()]
-        #print("array_sort : \n", array_sort)
-        #print(len(array_sort))
+        try:
+            array_sort = arr[arr[:,1].argsort()]
+        except:
+            array_sort = arr
 
         get_list = []
         state = False
