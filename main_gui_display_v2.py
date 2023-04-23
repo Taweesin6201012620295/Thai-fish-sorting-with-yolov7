@@ -15,7 +15,7 @@ from utils.general import check_img_size, check_imshow, non_max_suppression, sca
 from utils.torch_utils import select_device, TracedModel
 
 from threading import Thread
-from hd_nanpy_led import convenyor_run, convenyor_stop, call_arduino
+#from hd_nanpy_led import convenyor_run, convenyor_stop, call_arduino
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -309,8 +309,6 @@ class Ui_MainWindow(object):
         self.stop.setText(_translate("MainWindow", "stop"))
 
 
-
-
     # checkbox select all 
     def select_all(self, state):
         checkboxs = [self.checkBox_hang_lueang, self.checkBox_khang_pan, self.checkBox_pod, self.checkBox_ku_lare,
@@ -354,7 +352,7 @@ class Ui_MainWindow(object):
         if self.state_fish:
             self.start.hide()
             #run conveyor
-            convenyor_run()
+            #convenyor_run()
 
             # detect with camera ----------------------------------------------------------------------------------------------------- #
 
@@ -506,11 +504,11 @@ class Ui_MainWindow(object):
                         if len(check_type_fish) > 0:
                             no_change += 1
                             if no_change > 2:
-                                fish_out = max(check_type_fish, key=check_type_fish.count)
+                                fish_out = self.max_array(check_type_fish)
                                 print(fish_out)
-                                thr3 = Thread(target=call_arduino, args=[fish_out, selected_fish])
-                                thr3.start()
-                                thr3.join()
+                                #thr3 = Thread(target=call_arduino, args=[fish_out, selected_fish])
+                                #thr3.start()
+                                #thr3.join()
                                 check_type_fish = []
                                 no_change = 0
 
@@ -528,6 +526,13 @@ class Ui_MainWindow(object):
             msg_box_name.setStandardButtons(QMessageBox.Ok)
             msg_box_name.exec_()
 
+    def max_array(self,check_type_fish):
+        if check_type_fish == []:
+            return None
+        else:
+            max_array = max(check_type_fish, key=check_type_fish.count)
+            return max_array
+    
     # show display
     def display_image(self, frame):
         frame = cv2.resize(frame, (1920, 1080))
@@ -562,14 +567,13 @@ class Ui_MainWindow(object):
         cv2.destroyAllWindows()
         self.show_label("")
         # stop conveyor
-        convenyor_stop()
+        #convenyor_stop()
 
     # exit
     def stop_exit(self):
         self.show_label("press again to exit !!!")
         self.stop_work()
         self.exit.clicked.connect(exit)
-
 
     # ------------------------------------------------------------------------------------------------------ #
     def warning_full(self):
