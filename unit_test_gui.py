@@ -41,7 +41,7 @@ def test_button_start_with_checkBox():
     ui.checkBox_all.setChecked(True)
     # click start button
     ui.start.click()
-    assert ui.start.hide
+    assert ui.start.isHidden
     ui.stop.click()
     ui.exit.click()
 
