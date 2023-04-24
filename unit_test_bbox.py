@@ -9,18 +9,29 @@ class TestBboxMethods(unittest.TestCase):
         self.array1 = [3,       0.729948, 0.218519, 0.116146, 0.437037, 0.41455 ]
         self.array2 = [2,       0.730729, 0.219444, 0.117708, 0.437037, 0.523577]
         self.array3 = [3,       0.84729, 0.509444, 0.12308, 0.257037, 0.823577]
+        self.array4 = [1,       0.54, 0.45, 0.220313, 0.441667, 0.586339]
 
     def test_main_input1(self):
+
+        # empty 
         self.assertEqual(edit_boxes([]), [])
+
         # input 1 
         self.assertIn(self.array1, edit_boxes([self.array1]))
         self.assertEqual(edit_boxes([self.array1]), [self.array1])
+        self.assertEqual(edit_boxes([self.array2]), [self.array2])
+        self.assertEqual(edit_boxes([self.array3]), [self.array3])
+        self.assertEqual(edit_boxes([self.array4]), [self.array4])
+
         self.assertNotIn(self.array2, edit_boxes([self.array1]))
         self.assertNotEqual(edit_boxes([self.array1]), [])
 
     def test_main_input2(self):
         # input 2
         self.assertIn(self.array2, edit_boxes([self.array1, self.array2]))
+        self.assertIn(self.array2, edit_boxes([self.array2, self.array3]))
+        self.assertIn(self.array3, edit_boxes([self.array3, self.array4]))
+        self.assertIn(self.array1, edit_boxes([self.array1, self.array4]))
         self.assertEqual(edit_boxes([self.array1, self.array2]), [self.array2])
         self.assertNotEqual(edit_boxes([self.array1, self.array2]), [self.array1])
         self.assertNotEqual(edit_boxes([self.array1, self.array2]), [self.array3])
