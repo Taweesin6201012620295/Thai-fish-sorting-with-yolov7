@@ -59,7 +59,7 @@ class TestMainFinalV2(unittest.TestCase):
         self.assertFalse(self.form.checkBox_sai_dum.isChecked())
         self.assertFalse(self.form.start.isHidden())
 
-    # test value from sellect fish checkbox
+    # when select fish checkbox, show list of name select fish
     def test_checkbox(self):
         self.app = QApplication(sys.argv)
         MainWindow = QMainWindow()
